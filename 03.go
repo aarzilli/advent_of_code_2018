@@ -34,38 +34,6 @@ func atoi(in string) int {
 	return n
 }
 
-// convert vector of strings to integer
-func vatoi(in []string) []int {
-	r := make([]int, len(in))
-	for i := range in {
-		var err error
-		r[i], err = strconv.Atoi(in[i])
-		must(err)
-	}
-	return r
-}
-
-func printmatrix(matrix [][]byte) {
-	for i := range matrix {
-		for j := range matrix[i] {
-			fmt.Printf("%c ", matrix[i][j])
-		}
-		fmt.Printf("\n")
-	}
-	fmt.Printf("\n")
-}
-
-func countpixels(matrix [][]byte) (cnt int) {
-	for i := range matrix {
-		for j := range matrix[i] {
-			if matrix[i][j] == '#' {
-				cnt++
-			}
-		}
-	}
-	return cnt
-}
-
 type Claim struct {
 	id int
 	i, j int
