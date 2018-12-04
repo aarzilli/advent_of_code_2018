@@ -46,30 +46,8 @@ func vatoi(in []string) []int {
 	return r
 }
 
-func printmatrix(matrix [][]byte) {
-	for i := range matrix {
-		for j := range matrix[i] {
-			fmt.Printf("%c ", matrix[i][j])
-		}
-		fmt.Printf("\n")
-	}
-	fmt.Printf("\n")
-}
-
-func countpixels(matrix [][]byte) (cnt int) {
-	for i := range matrix {
-		for j := range matrix[i] {
-			if matrix[i][j] == '#' {
-				cnt++
-			}
-		}
-	}
-	return cnt
-}
-
 type Shift struct {
 	id int
-	key string
 	times []int
 }
 
@@ -100,65 +78,22 @@ func (s *Shift) isAsleep(minute int) bool {
 	return !awake
 }
 
-var monthlen = []int{
-	0, //nn
-	31, //gen
-	28, //feb
-	31, //mar
-	30, //apr
-	31, //mag
-	30, //giu
-	31, //lug
-	31, //ago
-	30, //set
-	31, //ott
-	30, //nov
-	31, //div
+type guardmin struct {
+	id int
+	m int
 }
 
-func getkey(line string) string {
-	fields := splitandclean(line, " ", -1)
-	key := fields[0][1:]
-	
-	hour := splitandclean(fields[1], ":", -1)[0]
-	if hour == "00" {
-		return key
-	}
-	
-	if hour != "23" {
-		panic("wtf")
-	}
-	
-	v := vatoi(splitandclean(key, "-", -1))
-	
-	v[2]++
-	
-	if v[2] > monthlen[v[1]] {
-		v[2] = 1
-		v[1]++
-	}
-	
-	if v[1] > 12 {
-		v[1] = 1
-		v[0]++
-	}
-	
-	return fmt.Sprintf("%04d-%02d-%02d", v[0], v[1], v[2])
-}
-
-const part1 = false
+const part1 = true
 
 func main() {
 	buf, err := ioutil.ReadFile("04.txt")
 	must(err)
 	
 	lines := strings.Split(string(buf), "\n")
-	sort.Strings(lines)
+	sort.Strings(lines) // fuck you eric
 	
 	shifts := []Shift{}
 	var curshift *Shift
-	
-	awake := false
 	
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -166,34 +101,10 @@ func main() {
 			continue
 		}
 		
-		//fmt.Printf("current line: %q\n", line)
-		
-		shouldAdd := false
-		
 		if strings.Contains(line, "begins shift") {
 			id := atoi(splitandclean(line, " ", -1)[3][1:])
 			shifts = append(shifts, Shift{id: id})
 			curshift = &shifts[len(shifts)-1]
-			awake = true
-			shouldAdd = true
-			curshift.key = getkey(line)
-			//fmt.Printf("\tshift start %q\n", curshift.key)
-		}
-		
-		if !shouldAdd {
-			if strings.Contains(line, "wakes up") && !awake {
-				shouldAdd = true
-			} else if strings.Contains(line, "falls asleep") && awake {
-				shouldAdd = true
-			}
-			if shouldAdd {
-				//fmt.Printf("\tawake: %v -> %v\n", awake, !awake)
-				awake = !awake
-			}
-		}
-		
-		if !shouldAdd {
-			continue
 		}
 		
 		v := vatoi(splitandclean(nolast(splitandclean(line, " ", -1)[1]), ":", 2))
@@ -202,8 +113,7 @@ func main() {
 			minute = minute - (24 * 60)
 		}
 		
-		if curshift != nil && getkey(line) == curshift.key {
-			//fmt.Printf("\tappending minute %d\n", minute)
+		if curshift != nil {
 			curshift.times = append(curshift.times, minute)
 		}
 	}
@@ -253,41 +163,23 @@ func main() {
 		
 		fmt.Printf("part 1: %d\n", maxasleepmin * sleepiestguard)
 	}
-	if !part1 {
-		asleepguardmin := map[guardmin]int{}
+	asleepguardmin := map[guardmin]int{}
+	
+	for i := range shifts {
+		s := &shifts[i]
 		
-		for i := range shifts {
-			s := &shifts[i]
-			
-			for m := 0; m < 60; m++ {
-				if s.isAsleep(m) {
-					asleepguardmin[guardmin{ s.id, m }]++
-				}
+		for m := 0; m < 60; m++ {
+			if s.isAsleep(m) {
+				asleepguardmin[guardmin{ s.id, m }]++
 			}
 		}
-		
-		maxgm := guardmin{}
-		for gm := range asleepguardmin {
-			if asleepguardmin[gm] > asleepguardmin[maxgm] {
-				maxgm = gm
-			}
-		}
-		fmt.Printf("%v %d\n", maxgm, maxgm.id * maxgm.m)
 	}
 	
-	/*
-	for i := 0; i < 60; i++ {
-		if shifts[0].isAsleep(i) {
-			fmt.Printf("#")
-		} else {
-			fmt.Printf(".")
+	maxgm := guardmin{}
+	for gm := range asleepguardmin {
+		if asleepguardmin[gm] > asleepguardmin[maxgm] {
+			maxgm = gm
 		}
 	}
-	fmt.Printf("\n")
-	*/
-}
-
-type guardmin struct {
-	id int
-	m int
+	fmt.Printf("PART2: %v %d\n", maxgm, maxgm.id * maxgm.m)
 }
