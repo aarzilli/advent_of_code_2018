@@ -13,11 +13,6 @@ func must(err error) {
 	}
 }
 
-// returns x without the last character
-func nolast(x string) string {
-	return x[:len(x)-1]
-}
-
 // splits a string, trims spaces on every element
 func splitandclean(in, sep string, n int) []string {
 	v := strings.SplitN(in, sep, n)
@@ -27,79 +22,76 @@ func splitandclean(in, sep string, n int) []string {
 	return v
 }
 
-func printmatrix(matrix [][]byte) {
-	for i := range matrix {
-		for j := range matrix[i] {
-			fmt.Printf("%c ", matrix[i][j])
-		}
-		fmt.Printf("\n")
-	}
-	fmt.Printf("\n")
-}
-
-func countpixels(matrix [][]byte) (cnt int) {
-	for i := range matrix {
-		for j := range matrix[i] {
-			if matrix[i][j] == '#' {
-				cnt++
-			}
-		}
-	}
-	return cnt
-}
-
-type instr struct {
+type Instr struct {
 	opcode string
-	args []arg
+	args []Arg
 }
 
-type arg struct {
+func parseInstr(line string) Instr {
+	fields := splitandclean(line, " ", -1)
+	opcode := fields[0]
+	args := make([]Arg, len(fields)-1)
+	for i, field := range fields[1:] {
+		if field[len(field)-1] == ',' {
+			field = field[:len(field)-1]
+		}
+		n, err := strconv.Atoi(field)
+		if err == nil {
+			args[i] = Arg{ val: n }
+		} else {
+			args[i] = Arg{ reg: field }
+		}
+	}
+	return Instr{ opcode, args }
+}
+
+func (instr Instr) argMustBeReg(argnum int) {
+	if instr.args[argnum].reg == "" {
+		panic("arg is not register")
+	}
+}
+
+type Arg struct {
 	reg string
 	val int
 }
 
-func (a arg) value(regs map[string]int) int {
+func (a Arg) value(regs map[string]int) int {
 	if a.reg == "" {
 		return a.val
 	}
 	return regs[a.reg]
 }
 
-var text []instr
+var text []Instr
 
 func run() {
 	pc := 0
 	snd := 0
 	regs := map[string]int{}
+	
+	
 	interpLoop:
 	for {
-		instr := text[pc]
+		instr := text[pc]		
 		switch instr.opcode {
 		case "snd":
 			snd = instr.args[0].value(regs)
 			pc++
 		case "set":
-			if instr.args[0].reg == "" {
-				panic("blah")
-			}
+			instr.argMustBeReg(0)
 			regs[instr.args[0].reg] = instr.args[1].value(regs)
 			pc++
 		case "add":
-			if instr.args[0].reg == "" {
-				panic("blah")
-			}
+			instr.argMustBeReg(0)
 			regs[instr.args[0].reg] = instr.args[0].value(regs) + instr.args[1].value(regs)
 			pc++
 		case "mul":
-			if instr.args[0].reg == "" {
-				panic("blah")
-			}
+			instr.argMustBeReg(0)
 			regs[instr.args[0].reg] = instr.args[0].value(regs) * instr.args[1].value(regs)
 			pc++
 		case "mod":
-			if instr.args[0].reg == "" {
-				panic("blah")
-			}
+			instr.argMustBeReg(0)
 			regs[instr.args[0].reg] = instr.args[0].value(regs) % instr.args[1].value(regs)
 			pc++
 		case "rcv":
@@ -121,29 +113,15 @@ func run() {
 }
 
 func main() {
-	buf, err := ioutil.ReadFile("18.txt")
+	buf, err := ioutil.ReadFile("../aoc2017bis/18.txt")
 	must(err)
 	for _, line := range strings.Split(string(buf), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
-		fields := splitandclean(line, " ", -1)
-		opcode := fields[0]
-		args := make([]arg, len(fields)-1)
-		for i, field := range fields[1:] {
-			n, err := strconv.Atoi(field)
-			if err == nil {
-				args[i] = arg{ val: n }
-			} else {
-				args[i] = arg{ reg: field }
-			}
-		}
-		text = append(text, instr{ opcode, args })
+		text = append(text, parseInstr(line))
 	}
 	
-	//fmt.Printf("%#v\n", text)
 	run()
 }
-
-// 14:02 (out of leaderboard)
