@@ -13,11 +13,6 @@ func must(err error) {
 	}
 }
 
-// returns x without the last character
-func nolast(x string) string {
-	return x[:len(x)-1]
-}
-
 // splits a string, trims spaces on every element
 func splitandclean(in, sep string, n int) []string {
 	v := strings.SplitN(in, sep, n)
@@ -32,38 +27,6 @@ func atoi(in string) int {
 	n, err := strconv.Atoi(in)
 	must(err)
 	return n
-}
-
-// convert vector of strings to integer
-func vatoi(in []string) []int {
-	r := make([]int, len(in))
-	for i := range in {
-		var err error
-		r[i], err = strconv.Atoi(in[i])
-		must(err)
-	}
-	return r
-}
-
-func printmatrix(matrix [][]byte) {
-	for i := range matrix {
-		for j := range matrix[i] {
-			fmt.Printf("%c ", matrix[i][j])
-		}
-		fmt.Printf("\n")
-	}
-	fmt.Printf("\n")
-}
-
-func countpixels(matrix [][]byte) (cnt int) {
-	for i := range matrix {
-		for j := range matrix[i] {
-			if matrix[i][j] == '#' {
-				cnt++
-			}
-		}
-	}
-	return cnt
 }
 
 type Coord struct {
@@ -159,8 +122,6 @@ func main() {
 		}
 	}
 	
-	fmt.Printf("%d\n", findClosest(Coord{ 5, 3 }))
-	
 	for x := min.x - 2; x <= max.x + 2; x++ {
 		for y := min.y - 2; y <= max.y + 2; y++ {
 			M[Coord{ x, y }] = findClosest(Coord{ x, y })
@@ -196,12 +157,9 @@ func main() {
 		excl[M[Coord{ x, max.x+2 }]] = true
 	}
 	
-	fmt.Printf("%v\n", excl)
-	
 	fmt.Printf("PART1: %d\n", largestArea(excl))
 	
 	var TGT = 32
-	
 	if len(coords) > 10 {
 		TGT = 10000
 	}
