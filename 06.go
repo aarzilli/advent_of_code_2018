@@ -154,7 +154,7 @@ func main() {
 	
 	for x := min.x - 2; x <= max.x+2; x++ {
 		excl[M[Coord{ x, min.y-2 }]] = true
-		excl[M[Coord{ x, max.x+2 }]] = true
+		excl[M[Coord{ x, max.y+2 }]] = true
 	}
 	
 	fmt.Printf("PART1: %d\n", largestArea(excl))
