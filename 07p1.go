@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"strconv"
+	"sort"
 )
 
 func must(err error) {
@@ -78,15 +79,70 @@ func countpixels(matrix [][]byte) (cnt int) {
 	return cnt
 }
 
+var depends = map[string][]string{}
+var ready = map[string]bool{}
+
+func findready() {
+	for node := range ready {
+		if len(depends[node]) == 0 {
+			ready[node] = true
+			//fmt.Printf("%s is ready\n", node)
+		}
+	}
+}
+
+func minready() string {
+	areready := []string{}
+	for node := range ready {
+		if ready[node] {
+			areready = append(areready, node)
+		}
+	}
+	sort.Strings(areready)
+	return areready[0]
+}
+
 func main() {
 	fmt.Printf("hello\n")
-	buf, err := ioutil.ReadFile("XX.txt")
+	buf, err := ioutil.ReadFile("07.txt")
 	must(err)
 	for _, line := range strings.Split(string(buf), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
-		//TODO: do something here
+		fields := splitandclean(line, " ", -1)
+		depends[fields[7]] = append(depends[fields[7]], fields[1])
+		ready[fields[7]] = false
+		ready[fields[1]] = false
 	}
+	
+	fmt.Printf("%v\n", depends)
+	
+	findready()
+	
+	r := []string{}
+	
+	for len(ready) > 0 {
+		node := minready()
+		//fmt.Printf("processing %s\n", node)
+		r = append(r, node)
+		delete(ready, node)
+		for node2 := range depends {
+			if r, ok := ready[node2]; !ok || r {
+				continue
+			}
+			newdep := []string{}
+			for _, dep := range depends[node2] {
+				if dep != node {
+					newdep = append(newdep, dep)
+				}
+			}
+			depends[node2] = newdep
+		}
+		//fmt.Printf("\n")
+		findready()
+	}
+	
+	fmt.Printf("%s\n", strings.Join(r, ""))
 }
