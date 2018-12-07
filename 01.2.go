@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func must(err error) {
@@ -31,7 +31,7 @@ func main() {
 		}
 		freqs = append(freqs, atoi(line))
 	}
-	
+
 	freq := 0
 	seen := map[int]bool{}
 	i := 0
@@ -41,7 +41,7 @@ func main() {
 			break
 		}
 		seen[freq] = true
-		freq += freqs[i % len(freqs)]
+		freq += freqs[i%len(freqs)]
 		i++
 	}
 }

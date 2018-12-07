@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
-	"sort"
 	"os"
+	"sort"
+	"strings"
 )
 
 func must(err error) {
@@ -123,13 +123,13 @@ func main() {
 		ready[fields[7]] = false
 		ready[fields[1]] = false
 	}
-	
+
 	r := []string{}
-	
+
 	if part1 {
 		fmt.Printf("%v\n", depends)
 		findready()
-		
+
 		for len(ready) > 0 {
 			node := minready()
 			//fmt.Printf("processing %s\n", node)
@@ -152,27 +152,26 @@ func main() {
 		}
 		fmt.Printf("%s\n", strings.Join(r, ""))
 	}
-	
+
 	if part1 {
 		os.Exit(0)
 	}
-	
-	
+
 	var numworkers = 2
 	var extratime = 0
-	
+
 	if len(depends) > 7 {
 		numworkers = 5
 		extratime = 60
 	}
-	
+
 	workers = make([]int, numworkers)
 	workerjob = make([]string, numworkers)
-	
+
 	fmt.Printf("starting\n")
 	fmt.Printf("%v\n", depends)
 	findready()
-	
+
 	for len(ready) > 0 {
 		var i int
 		for {
@@ -198,7 +197,7 @@ func main() {
 		workerjob[i] = node
 		workers[i] = (int(node[0]) - 'A') + 1 + extratime
 	}
-	
+
 	for {
 		busy := false
 		for i := range workers {

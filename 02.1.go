@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func must(err error) {
@@ -76,12 +76,12 @@ func main() {
 		if line == "" {
 			continue
 		}
-		
+
 		cnts := map[rune]int{}
 		for _, ch := range line {
 			cnts[ch]++
 		}
-		
+
 		for _, cnt := range cnts {
 			if cnt == 2 {
 				cnt2++

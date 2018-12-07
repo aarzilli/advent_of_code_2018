@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func must(err error) {
@@ -52,7 +52,7 @@ func findClosest(p Coord) int {
 }
 
 func dist(a, b Coord) int {
-	return abs(a.x - b.x) + abs(a.y - b.y)
+	return abs(a.x-b.x) + abs(a.y-b.y)
 }
 
 func abs(x int) int {
@@ -64,21 +64,21 @@ func abs(x int) int {
 
 func largestArea(excl map[int]bool) int {
 	area := map[int]int{}
-	
+
 	for _, idx := range M {
 		if excl[idx] {
 			continue
 		}
 		area[idx]++
 	}
-	
+
 	maxi := 0
 	for i := range area {
 		if area[i] > area[maxi] {
 			maxi = i
 		}
 	}
-	
+
 	return area[maxi]
 }
 
@@ -101,12 +101,12 @@ func main() {
 			continue
 		}
 		v := splitandclean(line, ",", -1)
-		coord := Coord{ atoi(v[0]), atoi(v[1]) }
+		coord := Coord{atoi(v[0]), atoi(v[1])}
 		coords = append(coords, coord)
 	}
-	
+
 	min, max := coords[0], coords[0]
-	
+
 	for _, coord := range coords {
 		if coord.x < min.x {
 			min.x = coord.x
@@ -121,57 +121,57 @@ func main() {
 			max.y = coord.y
 		}
 	}
-	
-	for x := min.x - 2; x <= max.x + 2; x++ {
-		for y := min.y - 2; y <= max.y + 2; y++ {
-			M[Coord{ x, y }] = findClosest(Coord{ x, y })
+
+	for x := min.x - 2; x <= max.x+2; x++ {
+		for y := min.y - 2; y <= max.y+2; y++ {
+			M[Coord{x, y}] = findClosest(Coord{x, y})
 		}
 	}
-	
+
 	if debugPart1 {
-		for y := min.y - 2; y <= max.y + 2; y++ {
-			for x := min.x - 2; x <= max.x + 2; x++ {
-				if M[Coord{ x, y }] < 0 {
+		for y := min.y - 2; y <= max.y+2; y++ {
+			for x := min.x - 2; x <= max.x+2; x++ {
+				if M[Coord{x, y}] < 0 {
 					fmt.Printf(".")
 				} else {
-					if dist(Coord{x, y }, coords[M[Coord{x, y}]]) == 0 {
-						fmt.Printf("%c", M[Coord{ x, y }] + 'A')
+					if dist(Coord{x, y}, coords[M[Coord{x, y}]]) == 0 {
+						fmt.Printf("%c", M[Coord{x, y}]+'A')
 					} else {
-						fmt.Printf("%c", M[Coord{ x, y }] + 'a')
+						fmt.Printf("%c", M[Coord{x, y}]+'a')
 					}
 				}
 			}
 			fmt.Printf("\n")
 		}
 	}
-	
+
 	excl := map[int]bool{}
-	
+
 	for y := min.y - 2; y <= max.y+2; y++ {
-		excl[M[Coord{ min.x-2, y }]] = true
-		excl[M[Coord{ max.x+2, y }]] = true
+		excl[M[Coord{min.x - 2, y}]] = true
+		excl[M[Coord{max.x + 2, y}]] = true
 	}
-	
+
 	for x := min.x - 2; x <= max.x+2; x++ {
-		excl[M[Coord{ x, min.y-2 }]] = true
-		excl[M[Coord{ x, max.y+2 }]] = true
+		excl[M[Coord{x, min.y - 2}]] = true
+		excl[M[Coord{x, max.y + 2}]] = true
 	}
-	
+
 	fmt.Printf("PART1: %d\n", largestArea(excl))
-	
+
 	var TGT = 32
 	if len(coords) > 10 {
 		TGT = 10000
 	}
-	
+
 	tgtarea := 0
-	for y := min.y - 2; y <= max.y + 2; y++ {
-		for x := min.x - 2; x <= max.x + 2; x++ {
-			if totalDist(Coord{ x, y }) < TGT {
+	for y := min.y - 2; y <= max.y+2; y++ {
+		for x := min.x - 2; x <= max.x+2; x++ {
+			if totalDist(Coord{x, y}) < TGT {
 				tgtarea++
 			}
 		}
 	}
-	
+
 	fmt.Printf("PART2: %d\n", tgtarea)
 }

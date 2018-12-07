@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
-	"strconv"
 	"sort"
+	"strconv"
+	"strings"
 )
 
 func must(err error) {
@@ -116,13 +116,13 @@ func main() {
 		ready[fields[7]] = false
 		ready[fields[1]] = false
 	}
-	
+
 	fmt.Printf("%v\n", depends)
-	
+
 	findready()
-	
+
 	r := []string{}
-	
+
 	for len(ready) > 0 {
 		node := minready()
 		//fmt.Printf("processing %s\n", node)
@@ -143,6 +143,6 @@ func main() {
 		//fmt.Printf("\n")
 		findready()
 	}
-	
+
 	fmt.Printf("%s\n", strings.Join(r, ""))
 }

@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
-	"strconv"
 	"sort"
+	"strconv"
+	"strings"
 )
 
 func must(err error) {
@@ -47,7 +47,7 @@ func vatoi(in []string) []int {
 }
 
 type Shift struct {
-	id int
+	id    int
 	times []int
 }
 
@@ -80,7 +80,7 @@ func (s *Shift) isAsleep(minute int) bool {
 
 type guardmin struct {
 	id int
-	m int
+	m  int
 }
 
 const part1 = true
@@ -88,58 +88,58 @@ const part1 = true
 func main() {
 	buf, err := ioutil.ReadFile("04.txt")
 	must(err)
-	
+
 	lines := strings.Split(string(buf), "\n")
 	sort.Strings(lines) // fuck you eric
-	
+
 	shifts := []Shift{}
 	var curshift *Shift
-	
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
-		
+
 		if strings.Contains(line, "begins shift") {
 			id := atoi(splitandclean(line, " ", -1)[3][1:])
 			shifts = append(shifts, Shift{id: id})
 			curshift = &shifts[len(shifts)-1]
 		}
-		
+
 		v := vatoi(splitandclean(nolast(splitandclean(line, " ", -1)[1]), ":", 2))
-		minute := v[0] * 60 + v[1]
+		minute := v[0]*60 + v[1]
 		if minute > 60 {
 			minute = minute - (24 * 60)
 		}
-		
+
 		if curshift != nil {
 			curshift.times = append(curshift.times, minute)
 		}
 	}
-	
+
 	if part1 {
 		//fmt.Printf("%#v\n", shifts)
-		
+
 		asleep := map[int]int{}
 		for i := range shifts {
 			n := shifts[i].asleep()
 			asleep[shifts[i].id] += n
 		}
-		
+
 		//fmt.Printf("%#v\n", asleep)
-		
+
 		sleepiestguard := 0
 		for i := range asleep {
 			if asleep[i] > asleep[sleepiestguard] {
 				sleepiestguard = i
 			}
 		}
-		
+
 		fmt.Printf("sleepiest guard %d\n", sleepiestguard)
-		
+
 		asleepcnt := make([]int, 60)
-		
+
 		for i := range shifts {
 			s := &shifts[i]
 			if s.id != sleepiestguard {
@@ -151,35 +151,35 @@ func main() {
 				}
 			}
 		}
-		
+
 		maxasleepmin := 0
 		for i := range asleepcnt {
 			if asleepcnt[i] > asleepcnt[maxasleepmin] {
 				maxasleepmin = i
 			}
 		}
-		
+
 		fmt.Printf("max asleep min %d\n", maxasleepmin)
-		
-		fmt.Printf("part 1: %d\n", maxasleepmin * sleepiestguard)
+
+		fmt.Printf("part 1: %d\n", maxasleepmin*sleepiestguard)
 	}
 	asleepguardmin := map[guardmin]int{}
-	
+
 	for i := range shifts {
 		s := &shifts[i]
-		
+
 		for m := 0; m < 60; m++ {
 			if s.isAsleep(m) {
-				asleepguardmin[guardmin{ s.id, m }]++
+				asleepguardmin[guardmin{s.id, m}]++
 			}
 		}
 	}
-	
+
 	maxgm := guardmin{}
 	for gm := range asleepguardmin {
 		if asleepguardmin[gm] > asleepguardmin[maxgm] {
 			maxgm = gm
 		}
 	}
-	fmt.Printf("PART2: %v %d\n", maxgm, maxgm.id * maxgm.m)
+	fmt.Printf("PART2: %v %d\n", maxgm, maxgm.id*maxgm.m)
 }

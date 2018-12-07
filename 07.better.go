@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
-	"sort"
 	"os"
+	"sort"
+	"strings"
 )
 
 func must(err error) {
@@ -24,9 +24,9 @@ func splitandclean(in, sep string, n int) []string {
 }
 
 type Task struct {
-	name string
-	running bool
-	todo map[string]bool
+	name       string
+	running    bool
+	todo       map[string]bool
 	dependants []*Task
 }
 
@@ -35,7 +35,7 @@ var tasks = map[string]*Task{}
 func lookup(name string) *Task {
 	t := tasks[name]
 	if t == nil {
-		t = &Task{ name: name, todo: make(map[string]bool) }
+		t = &Task{name: name, todo: make(map[string]bool)}
 		tasks[name] = t
 	}
 	return t
@@ -66,7 +66,6 @@ func finishtask(task *Task) {
 		delete(t2.todo, task.name)
 	}
 }
-
 
 var workers []int
 var workerjob []*Task
@@ -131,23 +130,23 @@ func main() {
 		t2 := lookup(fields[1])
 		t2.dependants = append(t2.dependants, t1)
 	}
-	
+
 	fmt.Printf("starting\n")
-	
-	r := []string{}	
-	
+
+	r := []string{}
+
 	var numworkers = 2
 	var extratime = 0
-	
+
 	if len(tasks) > 7 {
 		numworkers = 5
 		extratime = 60
 	}
-	
+
 	workers = make([]int, numworkers)
 	workerjob = make([]*Task, numworkers)
-	
-	mainloop:
+
+mainloop:
 	for {
 		var i int
 		for {
@@ -175,7 +174,7 @@ func main() {
 		workerjob[i] = task
 		workers[i] = (int(task.name[0]) - 'A') + 1 + extratime
 	}
-	
+
 	for {
 		busy := false
 		for i := range workers {
@@ -192,7 +191,7 @@ func main() {
 	part1out := strings.Join(r, "")
 	fmt.Printf("PART1: %s\n", part1out)
 	fmt.Printf("clock %d\n", clock)
-	
+
 	if isexample {
 		if part1out != "CAFBDE" || clock != 15 {
 			fmt.Printf("FAIL!\n")

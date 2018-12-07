@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func must(err error) {
@@ -67,7 +67,7 @@ func countpixels(matrix [][]byte) (cnt int) {
 }
 
 type Claim struct {
-	id int
+	id   int
 	i, j int
 	w, h int
 }
@@ -95,41 +95,41 @@ func main() {
 		claims = append(claims, Claim{
 			id, i, j, w, h,
 		})
-		if i + h + 1 > maxi {
-			maxi = i+h+1
+		if i+h+1 > maxi {
+			maxi = i + h + 1
 		}
-		if j + w + 1 > maxj {
-			maxj = j+w+1
+		if j+w+1 > maxj {
+			maxj = j + w + 1
 		}
 	}
-	
+
 	//fmt.Printf("%v\n", claims)
-	
+
 	M = make([][]int, maxi*2)
 	for i := range M {
 		M[i] = make([]int, maxj*2)
 	}
-	
+
 	for _, claim := range claims {
 		lay(claim)
 	}
-	
+
 	/*
-	for i := range M {
-		for j := range M[i] {
-			if M[i][j] > 0 {
-				fmt.Printf("%d", M[i][j])
-			} else if M[i][j] < 0 {
-				fmt.Printf("X")
-			} else {
-				fmt.Printf(".")
+		for i := range M {
+			for j := range M[i] {
+				if M[i][j] > 0 {
+					fmt.Printf("%d", M[i][j])
+				} else if M[i][j] < 0 {
+					fmt.Printf("X")
+				} else {
+					fmt.Printf(".")
+				}
 			}
+			fmt.Printf("\n")
 		}
-		fmt.Printf("\n")
-	}
 	*/
-	
-	contested :=0 
+
+	contested := 0
 	for i := range M {
 		for j := range M[i] {
 			if M[i][j] < 0 {
