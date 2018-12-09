@@ -3,20 +3,16 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	_ "os"
 	"strconv"
 	"strings"
-	_ "os"
+	"time"
 )
 
 func must(err error) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-// returns x without the last character
-func nolast(x string) string {
-	return x[:len(x)-1]
 }
 
 // splits a string, trims spaces on every element
@@ -33,50 +29,6 @@ func atoi(in string) int {
 	n, err := strconv.Atoi(in)
 	must(err)
 	return n
-}
-
-// convert vector of strings to integer
-func vatoi(in []string) []int {
-	r := make([]int, len(in))
-	for i := range in {
-		var err error
-		r[i], err = strconv.Atoi(in[i])
-		must(err)
-	}
-	return r
-}
-
-// convert vector of strings to integer, discard non-ints
-func vatoiSkip(in []string) []int {
-	r := make([]int, 0, len(in))
-	for i := range in {
-		n, err := strconv.Atoi(in[i])
-		if err == nil {
-			r = append(r, n)
-		}
-	}
-	return r
-}
-
-func printmatrix(matrix [][]byte) {
-	for i := range matrix {
-		for j := range matrix[i] {
-			fmt.Printf("%c ", matrix[i][j])
-		}
-		fmt.Printf("\n")
-	}
-	fmt.Printf("\n")
-}
-
-func countpixels(matrix [][]byte) (cnt int) {
-	for i := range matrix {
-		for j := range matrix[i] {
-			if matrix[i][j] == '#' {
-				cnt++
-			}
-		}
-	}
-	return cnt
 }
 
 const part2 = true
@@ -97,7 +49,16 @@ func main() {
 		if part2 {
 			lastpoints = lastpoints * 100
 		}
+		fmt.Printf("# %d %d\n", nplayers, lastpoints)
+
+		t0 := time.Now()
 		part1alt(nplayers, lastpoints)
+		fmt.Printf("array: %v\n", time.Since(t0))
+
+		t0 = time.Now()
+		part1ll(nplayers, lastpoints)
+		fmt.Printf("linked list: %v\n", time.Since(t0))
+
 		//part1(nplayers, lastpoints)
 		if lastpoints < 100 {
 			break
@@ -105,26 +66,91 @@ func main() {
 	}
 }
 
+type Node struct {
+	n          int
+	prev, next *Node
+}
+
+func part1ll(nplayers, lastpoints int) {
+	players := make([]int, nplayers)
+
+	circle := &Node{n: 0}
+	circle.prev = circle
+	circle.next = circle
+
+	cur := circle
+
+	for marble := 1; marble <= lastpoints; marble++ {
+		if debug {
+			printlist(circle, cur)
+		}
+		incplayer := func(points int) {
+			players[(marble-1)%len(players)] += points
+			if debugInc {
+				fmt.Printf("player %d gets %d points\n", (marble-1)%len(players), points)
+			}
+		}
+
+		if marble%23 == 0 {
+			incplayer(marble)
+			candidate := cur.prev.prev.prev.prev.prev.prev.prev
+			incplayer(candidate.n)
+			candidate.prev.next = candidate.next
+			candidate.next.prev = candidate.prev
+			cur = candidate.next
+		} else {
+			cur = cur.next
+			next := cur.next
+			newnode := &Node{n: marble}
+			newnode.prev = cur
+			newnode.next = next
+			cur.next = newnode
+			next.prev = newnode
+			cur = newnode
+		}
+	}
+	max := 0
+	for i := range players {
+		if players[i] > max {
+			max = players[i]
+		}
+	}
+	fmt.Printf("highest score %d (exp: 393229)\n", max)
+}
+
+func printlist(circle, cur *Node) {
+	it := circle
+	for {
+		if it == cur {
+			fmt.Printf("(%d)", it.n)
+		} else {
+			fmt.Printf(" %d ", it.n)
+		}
+		it = it.next
+		if it == circle {
+			break
+		}
+	}
+	fmt.Println()
+}
+
 func part1alt(nplayers, lastpoints int) {
-	fmt.Printf("# %d %d\n", nplayers, lastpoints)
-	circle := []int{ 0, 2,  1,  3 }
-	newcircle := []int{ 0, 4 }
+	circle := []int{0, 2, 1, 3}
+	newcircle := []int{0, 4}
 	var rewrite []int
 	rewritescratch := [8]int{}
 	players := make([]int, nplayers)
-	
-	
+
 	src := 1
 	marble := 5
-	
+
 	incplayer := func(points int) {
 		players[(marble-1)%len(players)] += points
 		if debugInc {
 			fmt.Printf("player %d gets %d points\n", (marble-1)%len(players), points)
 		}
 	}
-	
-	
+
 	for {
 		if len(rewrite) > 0 {
 			newcircle = append(newcircle, rewrite[0])
@@ -133,8 +159,8 @@ func part1alt(nplayers, lastpoints int) {
 			newcircle = append(newcircle, circle[src])
 			src++
 		}
-		
-		if marble % 23 == 0 {
+
+		if marble%23 == 0 {
 			incplayer(marble)
 			if len(newcircle) > 9 {
 				if debug2 {
@@ -159,18 +185,18 @@ func part1alt(nplayers, lastpoints int) {
 					fmt.Printf("%v\n", circle)
 					fmt.Printf("%v\n", newcircle)
 				}
-				
-				rem := len(circle)+len(newcircle)-9
-				
+
+				rem := len(circle) + len(newcircle) - 9
+
 				if debug3 {
 					fmt.Printf("index %d: %d\n", rem, circle[rem])
 				}
-				
+
 				incplayer(circle[rem])
-				
+
 				newcircle = append(newcircle, circle[src:rem]...)
-				src = rem+1
-				
+				src = rem + 1
+
 				if src < len(circle) {
 					newcircle = append(newcircle, circle[src])
 					src++
@@ -192,7 +218,7 @@ func part1alt(nplayers, lastpoints int) {
 			}
 			marble++
 		}
-		
+
 		newcircle = append(newcircle, marble)
 		marble++
 		if marble > lastpoints {
@@ -207,7 +233,7 @@ func part1alt(nplayers, lastpoints int) {
 			}
 		}
 	}
-	
+
 	if debug {
 		printcircle(circle, src)
 	}
@@ -219,9 +245,6 @@ func part1alt(nplayers, lastpoints int) {
 	}
 	fmt.Printf("highest score %d (exp: 393229)\n", max)
 }
-
-
-
 
 const debug = false
 const debug2 = false
@@ -245,49 +268,49 @@ func part1(nplayers, lastpoints int) {
 				fmt.Printf("player %d gets %d points\n", (marble-1)%len(players), points)
 			}
 		}
-		if marble % 1000 == 0 {
-			fmt.Printf("progress %d %0.02g%%\n", marble, float64(marble)/float64(lastpoints) * 100)
+		if marble%1000 == 0 {
+			fmt.Printf("progress %d %0.02g%%\n", marble, float64(marble)/float64(lastpoints)*100)
 		}
-		if marble % 23 == 0 {
+		if marble%23 == 0 {
 			if debug2 {
 				fmt.Printf("before:\n")
 				printcircle(circle, i)
 			}
 			incplayer(marble)
 			//newcircle := make([]int, 0, len(circle)-1)
-			ri1 := (i-7)
+			ri1 := (i - 7)
 			if ri1 < 0 {
-				ri1 = len(circle)+ri1
+				ri1 = len(circle) + ri1
 			} else {
 				ri1 = ri1 % len(circle)
 			}
-			ri2 := (i-6)
+			ri2 := (i - 6)
 			if ri2 < 0 {
-				ri2 = len(circle)+ri2
+				ri2 = len(circle) + ri2
 			} else {
 				ri2 = ri2 % len(circle)
 			}
-			
+
 			incplayer(circle[ri1])
-			
+
 			copy(circle[ri1:], circle[ri2:])
 			newi := ri1
 			circle = circle[:len(circle)-1]
-			
+
 			/*
-			newcircle = newcircle[:0]
-			newcircle = append(newcircle, circle[:ri1]...)
-			if debug2 {
-				fmt.Printf("removing %d\n", circle[ri1])
-			}
-			players[(marble-1)%len(players)] += circle[ri1]
-			newi := len(newcircle)
-			newcircle = append(newcircle, circle[ri2:]...)
-			temp := circle
-			circle = newcircle
-			newcircle = temp
+				newcircle = newcircle[:0]
+				newcircle = append(newcircle, circle[:ri1]...)
+				if debug2 {
+					fmt.Printf("removing %d\n", circle[ri1])
+				}
+				players[(marble-1)%len(players)] += circle[ri1]
+				newi := len(newcircle)
+				newcircle = append(newcircle, circle[ri2:]...)
+				temp := circle
+				circle = newcircle
+				newcircle = temp
 			*/
-			
+
 			i = newi
 			if debug2 {
 				fmt.Printf("after:\n")
@@ -299,13 +322,13 @@ func part1(nplayers, lastpoints int) {
 			printcircle(circle, i)
 		}
 		//newcircle = make([]int, 0, len(circle)+1)
-		
-		r1 := (i+1)%len(circle)+1
+
+		r1 := (i+1)%len(circle) + 1
 		circle = circle[:len(circle)+1]
 		copy(circle[r1+1:], circle[r1:])
 		circle[r1] = marble
 		newi := r1
-		
+
 		/*newcircle = newcircle[:0]
 		newcircle = append(newcircle, circle[:(i+1)%len(circle)+1]...)
 		newi := len(newcircle)
@@ -315,7 +338,7 @@ func part1(nplayers, lastpoints int) {
 		temp := circle
 		circle = newcircle
 		newcircle = temp*/
-		
+
 		i = newi
 	}
 	if debug {
