@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	_ "os"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -31,10 +31,16 @@ func atoi(in string) int {
 	return n
 }
 
-const part2 = true
+var part2 = false
 
 func main() {
-	buf, err := ioutil.ReadFile("09.txt")
+	path := "09.txt"
+	if len(os.Args) >= 2 {
+		path = os.Args[1]
+		part2 = true
+	}
+
+	buf, err := ioutil.ReadFile(path)
 	must(err)
 	for _, line := range strings.Split(string(buf), "\n") {
 		line = strings.TrimSpace(line)
@@ -54,6 +60,11 @@ func main() {
 		t0 := time.Now()
 		part1alt(nplayers, lastpoints)
 		fmt.Printf("array: %v\n", time.Since(t0))
+
+		if lastpoints >= 10000000 {
+			// linked list can't handle much more than this
+			break
+		}
 
 		t0 = time.Now()
 		part1ll(nplayers, lastpoints)
@@ -83,6 +94,9 @@ func part1ll(nplayers, lastpoints int) {
 	for marble := 1; marble <= lastpoints; marble++ {
 		if debug {
 			printlist(circle, cur)
+		}
+		if marble%6000000 == 0 {
+			fmt.Printf("progress %d\n", marble/6000000)
 		}
 		incplayer := func(points int) {
 			players[(marble-1)%len(players)] += points
@@ -135,8 +149,10 @@ func printlist(circle, cur *Node) {
 }
 
 func part1alt(nplayers, lastpoints int) {
-	circle := []int{0, 2, 1, 3}
-	newcircle := []int{0, 4}
+	circle := make([]int, 0, lastpoints+1)
+	newcircle := make([]int, 0, lastpoints+1)
+	circle = append(circle, 0, 2, 1, 3)
+	newcircle = append(newcircle, 0, 4)
 	var rewrite []int
 	rewritescratch := [8]int{}
 	players := make([]int, nplayers)
@@ -152,6 +168,9 @@ func part1alt(nplayers, lastpoints int) {
 	}
 
 	for {
+		if marble%6000000 == 0 {
+			fmt.Printf("progress %d\n", marble/6000000)
+		}
 		if len(rewrite) > 0 {
 			newcircle = append(newcircle, rewrite[0])
 			rewrite = rewrite[1:]
@@ -204,15 +223,23 @@ func part1alt(nplayers, lastpoints int) {
 						newcircle = append(newcircle, circle[src])
 						src++
 					} else {
+						temp := circle
 						circle = newcircle
-						newcircle = make([]int, 0, len(circle)*3)
+						fmt.Printf("reallocating (a) %d\n", len(circle)*2+10)
+						//newcircle = make([]int, 0, len(circle)*2+10)
+						newcircle = temp[:0]
 						newcircle = append(newcircle, circle[0])
+						fmt.Printf("survived\n")
 						src = 1
 					}
 				} else {
+					temp := circle
 					circle = newcircle
-					newcircle = make([]int, 0, len(circle)*3)
+					fmt.Printf("reallocating (b) %d\n", len(circle)*2+10)
+					//newcircle = make([]int, 0, len(circle)*2+10)
+					newcircle = temp[:0]
 					newcircle = append(newcircle, circle[:2]...)
+					fmt.Printf("survived\n")
 					src = 2
 				}
 			}
@@ -225,8 +252,12 @@ func part1alt(nplayers, lastpoints int) {
 			break
 		}
 		if src >= len(circle) && len(rewrite) <= 0 {
+			fmt.Printf("reallocating (c) %d\n", len(circle)*2+10)
+			temp := circle
 			circle = newcircle
-			newcircle = make([]int, 0, len(circle)*3)
+			//newcircle = make([]int, 0, len(circle)*2+10)
+			newcircle = temp[:0]
+			fmt.Printf("survived\n")
 			src = 0
 			if debug {
 				printcircle(circle, src)
@@ -244,6 +275,7 @@ func part1alt(nplayers, lastpoints int) {
 		}
 	}
 	fmt.Printf("highest score %d (exp: 393229)\n", max)
+	fmt.Printf("final array length %d\n", len(circle))
 }
 
 const debug = false
