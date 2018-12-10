@@ -34,60 +34,6 @@ func atoi(in string) int {
 	return n
 }
 
-// convert vector of strings to integer
-func vatoi(in []string) []int {
-	r := make([]int, len(in))
-	for i := range in {
-		var err error
-		r[i], err = strconv.Atoi(in[i])
-		must(err)
-	}
-	return r
-}
-
-// convert vector of strings to integer, discard non-ints
-func vatoiSkip(in []string) []int {
-	r := make([]int, 0, len(in))
-	for i := range in {
-		n, err := strconv.Atoi(in[i])
-		if err == nil {
-			r = append(r, n)
-		}
-	}
-	return r
-}
-
-func printmatrix(matrix [][]byte) {
-	for i := range matrix {
-		for j := range matrix[i] {
-			fmt.Printf("%c ", matrix[i][j])
-		}
-		fmt.Printf("\n")
-	}
-	fmt.Printf("\n")
-}
-
-func countpixels(matrix [][]byte) (cnt int) {
-	for i := range matrix {
-		for j := range matrix[i] {
-			if matrix[i][j] == '#' {
-				cnt++
-			}
-		}
-	}
-	return cnt
-}
-
-func removeempty(v []string) []string {
-	r := make([]string, 0, len(v))
-	for _, s := range v {
-		if s != "" {
-			r = append(r, s)
-		}
-	}
-	return r
-}
-
 func parsepoint(in string) (int, int) {
 	v := splitandclean(in, "<", -1)
 	vv := splitandclean(v[1], ",", -1)
@@ -172,11 +118,6 @@ func main() {
 		x, y := parsepoint(fuck[0])
 		vx, vy := parsepoint(fuck[1])
 		
-		/*fields := removeempty(splitandclean(line, " ", -1))
-		x := atoi(nolast(fields[1]))
-		y := atoi(nolast(fields[2]))
-		vx := atoi(nolast(fields[4]))
-		vy := atoi(nolast(fields[5]))*/
 		ptcs = append(ptcs, Ptc{ pos: Coord{ x, y }, v: Coord{ vx, vy }  })
 	}
 	
