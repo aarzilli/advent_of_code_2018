@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"os"
 )
 
 func must(err error) {
@@ -267,7 +268,11 @@ func checkfinished(round int) bool {
 var stoponelfdeath = false
 
 func initialize(elfattack int) {
-	buf, err := ioutil.ReadFile("15.txt")
+	path := "15.txt"
+	if len(os.Args) > 1 {
+		path = os.Args[1]
+	}
+	buf, err := ioutil.ReadFile(path)
 	must(err)
 	M = nil
 	units = nil
@@ -292,6 +297,16 @@ func initialize(elfattack int) {
 	}
 }
 
+func alive(typ byte) int {
+	hp := 0
+	for i := range units {
+		if units[i].typ == typ {
+			hp += units[i].hp
+		}
+	}
+	return hp
+}
+
 func battle() bool {
 	var round int
 	defer func() {
@@ -306,6 +321,9 @@ func battle() bool {
 		fmt.Printf("%v at %d\n", ierr, round)
 	}()
 	for round = 0; ; round++ {
+		if round % 1000 == 0 && round != 0 {
+			fmt.Printf("round %d: elves: %dHP goblins %dHP\n", round, alive('E'), alive('G'))
+		}
 		runturn()
 		if checkfinished(round) {
 			return true
