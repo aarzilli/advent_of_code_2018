@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"sort"
 	"strconv"
 	"strings"
-	"sort"
-	"os"
 )
 
 func must(err error) {
@@ -27,10 +27,10 @@ type Coord struct {
 }
 
 type Unit struct {
-	typ byte
-	pos Coord
+	typ    byte
+	pos    Coord
 	hp, ap int
-	dead bool
+	dead   bool
 }
 
 var M = [][]byte{}
@@ -48,7 +48,7 @@ func printmatrix(matrix [][]byte) {
 
 func findreachable(pos Coord, reachset map[Coord]bool) {
 	reachset[pos] = true
-	for _, pos := range []Coord{ { pos.i+1, pos.j }, { pos.i-1, pos.j }, {pos.i, pos.j-1}, {pos.i, pos.j+1}} {
+	for _, pos := range []Coord{{pos.i + 1, pos.j}, {pos.i - 1, pos.j}, {pos.i, pos.j - 1}, {pos.i, pos.j + 1}} {
 		ti, tj := pos.i, pos.j
 		if ti < 0 || ti >= len(M) {
 			continue
@@ -91,23 +91,23 @@ const debugMove = false
 const debugAttack = false
 
 type moveDest struct {
-	pos Coord
+	pos   Coord
 	steps []Coord
 }
 
 func (u *Unit) move() {
 	reachset := map[Coord]bool{}
 	findreachable(u.pos, reachset)
-	
+
 	moveTargets := map[Coord]bool{}
-	
+
 	addreachable := func(ti, tj int) {
-		tp := Coord{ ti, tj }
+		tp := Coord{ti, tj}
 		if reachset[tp] {
 			moveTargets[tp] = true
 		}
 	}
-	
+
 	for j := range units {
 		if units[j].typ == u.typ {
 			continue
@@ -118,30 +118,30 @@ func (u *Unit) move() {
 		addreachable(p.i, p.j-1)
 		addreachable(p.i, p.j+1)
 	}
-	
+
 	movev := []moveDest{}
 	for p := range moveTargets {
 		movev = append(movev, moveDest{
-			pos: p,
+			pos:   p,
 			steps: shortestpath(u.pos, p),
 		})
 	}
-	
-	sort.Slice(movev, func(i, j int) bool { 
+
+	sort.Slice(movev, func(i, j int) bool {
 		if len(movev[i].steps) == len(movev[j].steps) {
 			return posbefore(movev[i].pos, movev[j].pos)
 		}
 		return len(movev[i].steps) < len(movev[j].steps)
 	})
-	
+
 	if debugMove {
 		fmt.Printf("move targets for unit at %v: %v\n", u.pos, movev)
 	}
-	
+
 	if len(movev) == 0 {
 		return
 	}
-	
+
 	if len(movev[0].steps) == 0 {
 		return
 	}
@@ -149,7 +149,7 @@ func (u *Unit) move() {
 	if debugMove {
 		fmt.Printf("unit at %v moves to %v\n", u.pos, movev[0].steps[0])
 	}
-	
+
 	M[u.pos.i][u.pos.j] = '.'
 	u.pos.i = movev[0].steps[0].i
 	u.pos.j = movev[0].steps[0].j
@@ -157,25 +157,25 @@ func (u *Unit) move() {
 }
 
 type path struct {
-	at Coord
+	at    Coord
 	steps []Coord
 }
 
 func shortestpath(start, end Coord) []Coord {
 	//fmt.Printf("shortest path %v %v\n", start, end)
 	//defer fmt.Printf("done\n")
-	fringe := []path{ path{ at: start, steps: nil } }
+	fringe := []path{path{at: start, steps: nil}}
 	seen := map[Coord]bool{}
-	
+
 	for len(fringe) > 0 {
 		cur := fringe[0]
 		seen[cur.at] = true
 		fringe = fringe[1:]
-		
+
 		if cur.at == end {
 			return cur.steps
 		}
-		
+
 		infringe := func(i, j int) bool {
 			p := Coord{i, j}
 			for k := range fringe {
@@ -195,25 +195,25 @@ func shortestpath(start, end Coord) []Coord {
 			if M[i][j] != '.' {
 				return
 			}
-			if infringe(i, j) || seen[Coord{ i, j }] {
+			if infringe(i, j) || seen[Coord{i, j}] {
 				return
 			}
-			
+
 			var n path
-			n.at = Coord{ i, j }
+			n.at = Coord{i, j}
 			n.steps = make([]Coord, 0, len(cur.steps)+1)
 			n.steps = append(n.steps, cur.steps...)
 			n.steps = append(n.steps, n.at)
-			
+
 			fringe = append(fringe, n)
 		}
-		
+
 		addstep(cur.at.i-1, cur.at.j)
 		addstep(cur.at.i, cur.at.j-1)
 		addstep(cur.at.i, cur.at.j+1)
 		addstep(cur.at.i+1, cur.at.j)
 	}
-	
+
 	panic("unreachable")
 }
 
@@ -245,28 +245,28 @@ func (u *Unit) attack() bool {
 			return -1
 		}
 		if M[si][sj] == enemyof(u.typ) {
-			return findUnit(Coord{ si, sj })
+			return findUnit(Coord{si, sj})
 		}
 		return -1
 	}
-	
+
 	enemyv := []int{}
-	
+
 	addenemy := func(ei, ej int) {
 		if id := findenemy(ei, ej); id >= 0 {
 			enemyv = append(enemyv, id)
 		}
 	}
-	
+
 	addenemy(u.pos.i-1, u.pos.j)
 	addenemy(u.pos.i+1, u.pos.j)
 	addenemy(u.pos.i, u.pos.j-1)
 	addenemy(u.pos.i, u.pos.j+1)
-	
+
 	if len(enemyv) == 0 {
 		return false
 	}
-	
+
 	sort.Slice(enemyv, func(i, j int) bool {
 		eu1 := units[enemyv[i]]
 		eu2 := units[enemyv[j]]
@@ -275,15 +275,15 @@ func (u *Unit) attack() bool {
 		}
 		return eu1.hp < eu2.hp
 	})
-	
+
 	eu := &units[enemyv[0]]
-	
+
 	if debugAttack {
 		fmt.Printf("unit at %v attacks unit at %v\n", u.pos, eu.pos)
 	}
-	
+
 	eu.hp -= u.ap
-	
+
 	if eu.hp < 0 {
 		if debugAttack {
 			fmt.Printf("\tunit at %v is dead\n")
@@ -309,21 +309,21 @@ func runturn() {
 	sort.Slice(order, func(i, j int) bool {
 		c1 := &units[order[i]]
 		c2 := &units[order[j]]
-		
+
 		if c1.pos == c2.pos && c1.pos.i != -100 {
 			panic("unfound collision?")
 		}
 		return posbefore(c1.pos, c2.pos)
 	})
-	
+
 	for ii := range order {
 		i := order[ii]
 		u := &units[i]
-		
+
 		if u.dead {
 			continue
 		}
-		
+
 		attacked := u.attack()
 		if !attacked {
 			u.move()
@@ -340,7 +340,7 @@ func checkfinished(round int) bool {
 		if units[i].dead {
 			continue
 		}
-		cnt[units[i].typ] +=units[i].hp
+		cnt[units[i].typ] += units[i].hp
 		if debugFinished {
 			fmt.Printf("unit %c at %v is alive with %d hp\n", units[i].typ, units[i].pos, units[i].hp)
 		}
@@ -359,6 +359,7 @@ func checkfinished(round int) bool {
 var stoponelfdeath = false
 
 var round int
+
 const debugMinimal = false
 
 func main() {
@@ -376,7 +377,7 @@ func main() {
 		}
 		M = append(M, []byte(line))
 	}
-	
+
 	for i := range M {
 		for j := range M[i] {
 			if M[i][j] == 'E' || M[i][j] == 'G' {
@@ -384,11 +385,11 @@ func main() {
 				if M[i][j] == 'E' {
 					attack = elfattack
 				}
-				units = append(units, Unit{ M[i][j], Coord{ i, j }, 200, attack, false })
+				units = append(units, Unit{M[i][j], Coord{i, j}, 200, attack, false})
 			}
 		}
 	}
-	
+
 	for round = 0; ; round++ {
 		if debugMinimal {
 			fmt.Printf("at %d\n", round)
@@ -404,3 +405,16 @@ func main() {
 // run with
 // for i in $(seq 4 100); do echo attack power $i; go run 15.go $i; done
 // to find the answer for part2
+
+/* PART1 OUTPUT:
+G won: 2336 (round: 105)
+outcome 245280
+alt outcome 247616
+*/
+
+/* PART2 OUTPUT:
+attack power 19
+E won: 1442 (round: 52)
+outcome 74984
+alt outcome 76426
+*/
