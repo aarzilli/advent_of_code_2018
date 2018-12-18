@@ -233,6 +233,8 @@ func iscycle() bool {
 	return false
 }
 
+const debugAutomata = false
+
 func main() {
 	buf, err := ioutil.ReadFile("18.txt")
 	must(err)
@@ -244,47 +246,28 @@ func main() {
 		M = append(M, []byte(line))
 	}
 
-	//const N = 10 // part 1
-	const N = 1000000000 // part 2
+	const N1 = 10         // part 1
+	const N2 = 1000000000 // part 2
 	//const N = 600
 
 	var firstCycleIdx int
 
-	for i := 0; i < N; i++ {
-		fmt.Printf("cycle %d\n", i)
-		printmatrix(M)
+	for i := 0; i < N2; i++ {
+		if debugAutomata {
+			fmt.Printf("cycle %d\n", i)
+			printmatrix(M)
+		}
+		if i == N1 {
+			fmt.Printf("PART1 %d\n", count())
+		}
 		step()
 		if iscycle() {
-			AllM = AllM[:len(AllM)-1]
+			//AllM = AllM[:len(AllM)-1]
 			firstCycleIdx = i + 1
 			break
 		}
 	}
 
-	for i := cycleStart; i < len(AllM); i++ {
-		M = AllM[i]
-		fmt.Printf("%d: %d\n", i, count())
-	}
-
-	p := cycleStart
-	for i := 0; i+firstCycleIdx < N; i++ {
-		p++
-		if p > len(AllM) {
-			p = cycleStart
-		}
-	}
-
-	fmt.Printf("p is %d (N - firstCycleIdx = %d)\n", p, N-firstCycleIdx)
-
-	//M = AllM[((N - firstCycleIdx) % (len(AllM) - cycleStart)) + cycleStart]
-	M = AllM[p]
+	M = AllM[((N2-firstCycleIdx)%(len(AllM)-cycleStart))+cycleStart]
 	fmt.Printf("PART2 %d\n", count())
-
-	/*
-		printmatrix(M)
-
-		fmt.Printf("PART1 %d\n", count())
-	*/
 }
-
-// N=600 -> 574*340 = 195160
