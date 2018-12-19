@@ -1,0 +1,146 @@
+#ip 2
+addi reg2 + 16 -> reg2
+seti 1 (1) -> reg3
+seti 1 (7) -> reg5
+mulr reg3 * reg5 -> reg4
+eqrr reg4 == reg1 -> reg4
+addr reg4 + reg2 -> reg2
+addi reg2 + 1 -> reg2
+addr reg3 + reg0 -> reg0
+addi reg5 + 1 -> reg5
+gtrr reg5 > reg1 -> reg4
+addr reg2 + reg4 -> reg2
+seti 2 (3) -> reg2
+addi reg3 + 1 -> reg3
+gtrr reg3 > reg1 -> reg4
+addr reg4 + reg2 -> reg2
+seti 1 (9) -> reg2
+mulr reg2 * reg2 -> reg2
+addi reg1 + 2 -> reg1
+mulr reg1 * reg1 -> reg1
+mulr reg2 * reg1 -> reg1
+muli reg1 * 11 -> reg1
+addi reg4 + 3 -> reg4
+mulr reg4 * reg2 -> reg4
+addi reg4 + 13 -> reg4
+addr reg1 + reg4 -> reg1
+addr reg2 + reg0 + reg2
+seti 0 (1) -> reg2
+setr reg2 (0) -> reg4
+mulr reg4 * reg2 -> reg4
+addr reg2 + reg4 -> reg4
+mulr reg2 * reg4 -> reg4
+muli reg4 * 14 -> reg4
+mulr reg4 * reg2 -> reg4
+addr reg1 + reg4 -> reg1
+seti 0 (4) -> reg0
+seti 0 (5) -> reg2
+
+================================================================
+
+
+#ip 2
+0 addi reg2 + 16 -> reg2
+1 seti 1 (1) -> reg3
+2 seti 1 (7) -> reg5
+3 mulr reg3 * reg5 -> reg4
+4 eqrr reg4 == reg1 -> reg4
+5 addr reg4 + reg2 -> reg2
+6 addi reg2 + 1 -> reg2
+7 addr reg3 + reg0 -> reg0
+8 addi reg5 + 1 -> reg5
+9 gtrr reg5 > reg1 -> reg4
+10 addr reg2 + reg4 -> reg2
+11 seti 2 (3) -> reg2
+12 addi reg3 + 1 -> reg3
+13 gtrr reg3 > reg1 -> reg4
+14 addr reg4 + reg2 -> reg2
+15 seti 1 (9) -> reg2
+16 mulr reg2 * reg2 -> reg2
+17 addi reg1 + 2 -> reg1
+18 mulr reg1 * reg1 -> reg1
+19 mulr reg2 * reg1 -> reg1
+20 muli reg1 * 11 -> reg1
+21 addi reg4 + 3 -> reg4
+22 mulr reg4 * reg2 -> reg4
+23 addi reg4 + 13 -> reg4
+24 addr reg1 + reg4 -> reg1
+25 addr reg2 + reg0 + reg2
+26 seti 0 (1) -> reg2
+27 setr reg2 (0) -> reg4
+28 mulr reg4 * reg2 -> reg4
+29 addr reg2 + reg4 -> reg4
+30 mulr reg2 * reg4 -> reg4
+31 muli reg4 * 14 -> reg4
+32 mulr reg4 * reg2 -> reg4
+33 addr reg1 + reg4 -> reg1
+34 seti 0 (4) -> reg0
+35 seti 0 (5) -> reg2
+
+
+===================================================================
+
+
+#ip 2
+0 jmp 17 (INIT)
+
+PART1:
+1 seti 1 (1) -> reg3 			// reg3 = 1
+
+reg3_loop:
+2 seti 1 (7) -> reg5			// reg5 = 1
+
+reg5_loop:
+3 mulr reg3 * reg5 -> reg4		// ...... reg4 = reg5*reg3
+4 eqrr reg4 == reg1 -> reg4		// ... ... reg4 = (reg4 == reg1)
+5 addr reg4 + reg2 -> reg2		// if reg5*reg3 == reg1: reg0 = reg0 + reg3
+6 addi reg2 + 1 -> reg2			// ^
+7 addr reg3 + reg0 -> reg0		// ^
+
+8 addi reg5 + 1 -> reg5			// reg5 = reg5 + 1
+9 gtrr reg5 > reg1 -> reg4		// ...... reg4 = (reg5 > reg1)
+10 addr reg2 + reg4 -> reg2		
+11 jmp 3					// if (reg5 <= reg1): jmp 3 (reg5_loop)
+
+12 addi reg3 + 1 -> reg3			// reg3 = reg3 + 1
+13 gtrr reg3 > reg1 -> reg4		// ...... reg4 = (reg3 > reg1)
+14 addr reg4 + reg2 -> reg2		// if (reg3 > reg1): halt
+15 jmp 2					// jmp reg3_loop
+16 mulr reg2 * reg2 -> reg2
+
+
+
+
+INIT:
+17 addi reg1 + 2 -> reg1  
+18 mulr reg1 * reg1 -> reg1
+19 mulr reg2 * reg1 -> reg1
+20 muli reg1 * 11 -> reg1 // reg1 = 11*19*((reg1 + 2)*(reg1+2))
+// se reg1 == 0: reg1 = 836
+
+21 addi reg4 + 3 -> reg4 
+22 mulr reg4 * reg2 -> reg4 
+23 addi reg4 + 13 -> reg4 // reg4 = 22*(reg4 + 3) + 13
+// se reg3 == 0: reg4 = 79
+
+24 addr reg1 + reg4 -> reg1 // reg1 = reg1 + reg4
+// se reg1 == 0 (a INIT): reg1 = 915
+
+25 addr reg2 + reg0 -> reg2
+// se reg0 == 0 (a INIT): nop
+
+26 jmp 1 (PART1)
+
+
+
+
+
+27 setr reg2 (0) -> reg4
+28 mulr reg4 * reg2 -> reg4
+29 addr reg2 + reg4 -> reg4
+30 mulr reg2 * reg4 -> reg4
+31 muli reg4 * 14 -> reg4
+32 mulr reg4 * reg2 -> reg4
+33 addr reg1 + reg4 -> reg1
+34 seti 0 (4) -> reg0
+35 seti 0 (5) -> reg2
