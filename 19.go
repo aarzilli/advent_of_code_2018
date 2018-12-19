@@ -295,11 +295,12 @@ func findOpcode(name string) Opcode {
 
 func run() {
 	var regs Regs
+	//regs.r[0] = 1
 	ip := 0
 	for ip < len(text) {
 		regs.Set(ipreg, ip)
 		instr := text[regs.Val(ipreg)]
-		fmt.Printf("%d %v %v\n", ip, instr, regs)
+		//fmt.Printf("%d %v %v\n", ip, instr, regs)
 		ok := findOpcode(instr.opcode).F(instr, &regs)
 		fmt.Printf("-> %v\n", regs)
 		if !ok {

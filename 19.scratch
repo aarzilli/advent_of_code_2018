@@ -132,15 +132,14 @@ INIT:
 26 jmp 1 (PART1)
 
 
-
-
-
-27 setr reg2 (0) -> reg4
-28 mulr reg4 * reg2 -> reg4
-29 addr reg2 + reg4 -> reg4
-30 mulr reg2 * reg4 -> reg4
-31 muli reg4 * 14 -> reg4
-32 mulr reg4 * reg2 -> reg4
-33 addr reg1 + reg4 -> reg1
-34 seti 0 (4) -> reg0
-35 seti 0 (5) -> reg2
+PART2:
+27 setr reg2 (0) -> reg4			// reg4 = 27
+28 mulr reg4 * reg2 -> reg4		// reg4 = 27*28
+29 addr reg2 + reg4 -> reg4		// reg4 = 27*28 + 29
+30 mulr reg2 * reg4 -> reg4		// reg4 = (27*28 + 29) * 30
+31 muli reg4 * 14 -> reg4			// reg4 = ((27*28 + 29) * 30) * 14
+32 mulr reg4 * reg2 -> reg4		// reg4 = (((27*28 + 29) * 30) * 14) * 32
+33 addr reg1 + reg4 -> reg1		// reg1 = 915 + (((27*28 + 29) * 30) * 14) * 32
+						// reg1 = 10551315
+34 seti 0 (4) -> reg0			// reg0 = 0
+35 jmp 1 (PART1)				// jmp PART1
