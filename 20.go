@@ -12,7 +12,7 @@ func must(err error) {
 	}
 }
 
-var Graph = map[Coord]*Node{}
+type Graph map[Coord]*Node
 
 type Node struct {
 	Pos   Coord
@@ -23,21 +23,7 @@ type Coord struct {
 	i, j int
 }
 
-var max, min Coord
-
-func lookup(p Coord) *Node {
-	if p.i > max.i {
-		max.i = p.i
-	}
-	if p.j > max.j {
-		max.j = p.j
-	}
-	if p.i < min.i {
-		min.i = p.i
-	}
-	if p.j < min.j {
-		min.j = p.j
-	}
+func (Graph Graph) lookup(p Coord) *Node {
 	if _, ok := Graph[p]; !ok {
 		Graph[p] = &Node{Pos: p}
 	}
@@ -46,12 +32,15 @@ func lookup(p Coord) *Node {
 
 const debugParse = false
 
-func parseAlternatives(in []byte, pos Coord, toplevel bool, indent string) []byte {
+func (Graph Graph) parseAlternatives(in []byte, vpos []Coord, toplevel bool, indent string) ([]byte, []Coord) {
 	if debugParse {
 		fmt.Printf("%sstart alternative:\n", indent)
 	}
+	outpos := []Coord{}
 	for len(in) > 0 {
-		in = parseSingleRun(in, pos, toplevel, indent+"\t")
+		var newpos []Coord
+		in, newpos = Graph.parseSingleRun(in, clone(vpos), toplevel, indent+"\t")
+		outpos = append(outpos, newpos...)
 		if len(in) == 0 {
 			break
 		}
@@ -66,7 +55,7 @@ func parseAlternatives(in []byte, pos Coord, toplevel bool, indent string) []byt
 			if toplevel {
 				panic("wtf")
 			}
-			return in
+			return in, dedup(outpos)
 		default:
 			panic("wtf?")
 		}
@@ -76,17 +65,36 @@ func parseAlternatives(in []byte, pos Coord, toplevel bool, indent string) []byt
 		}
 	}
 
-	return in
+	return in, dedup(outpos)
 }
 
-func addlink(a, b Coord) {
-	na := lookup(a)
-	nb := lookup(b)
+func clone(vpos []Coord) []Coord {
+	r := make([]Coord, len(vpos))
+	copy(r, vpos)
+	return r
+}
+
+func dedup(vpos []Coord) []Coord {
+	m := make(map[Coord]bool, len(vpos))
+	for i := range vpos {
+		m[vpos[i]] = true
+	}
+
+	r := make([]Coord, 0, len(m))
+	for pos := range m {
+		r = append(r, pos)
+	}
+	return r
+}
+
+func (Graph Graph) addlink(a, b Coord) {
+	na := Graph.lookup(a)
+	nb := Graph.lookup(b)
 	na.Child = append(na.Child, nb)
 	nb.Child = append(nb.Child, na)
 }
 
-func haslink(a, b Coord) bool {
+func (Graph Graph) haslink(a, b Coord) bool {
 	na := Graph[a]
 	nb := Graph[b]
 	if na == nil || nb == nil {
@@ -100,7 +108,7 @@ func haslink(a, b Coord) bool {
 	return false
 }
 
-func parseSingleRun(in []byte, pos Coord, toplevel bool, indent string) []byte {
+func (Graph Graph) parseSingleRun(in []byte, vpos []Coord, toplevel bool, indent string) ([]byte, []Coord) {
 	for len(in) > 0 {
 		ch := in[0]
 		oldin := in
@@ -111,39 +119,48 @@ func parseSingleRun(in []byte, pos Coord, toplevel bool, indent string) []byte {
 			if debugParse {
 				fmt.Printf("%schar %c\n", indent, ch)
 			}
-			nextPos := Coord{pos.i - 1, pos.j}
-			addlink(pos, nextPos)
-			pos = nextPos
+			for i := range vpos {
+				nextPos := Coord{vpos[i].i - 1, vpos[i].j}
+				Graph.addlink(vpos[i], nextPos)
+				vpos[i] = nextPos
+			}
 		case 'S':
 			if debugParse {
 				fmt.Printf("%schar %c\n", indent, ch)
 			}
-			nextPos := Coord{pos.i + 1, pos.j}
-			addlink(pos, nextPos)
-			pos = nextPos
+			for i := range vpos {
+				nextPos := Coord{vpos[i].i + 1, vpos[i].j}
+				Graph.addlink(vpos[i], nextPos)
+				vpos[i] = nextPos
+			}
 		case 'E':
 			if debugParse {
 				fmt.Printf("%schar %c\n", indent, ch)
 			}
-			nextPos := Coord{pos.i, pos.j + 1}
-			addlink(pos, nextPos)
-			pos = nextPos
+			for i := range vpos {
+				nextPos := Coord{vpos[i].i, vpos[i].j + 1}
+				Graph.addlink(vpos[i], nextPos)
+				vpos[i] = nextPos
+			}
 		case 'W':
 			if debugParse {
 				fmt.Printf("%schar %c\n", indent, ch)
 			}
-			nextPos := Coord{pos.i, pos.j - 1}
-			addlink(pos, nextPos)
-			pos = nextPos
+			for i := range vpos {
+				nextPos := Coord{vpos[i].i, vpos[i].j - 1}
+				Graph.addlink(vpos[i], nextPos)
+				vpos[i] = nextPos
+			}
 		case '(':
-			in = parseAlternatives(in, pos, false, indent+"\t")
+			in, vpos = Graph.parseAlternatives(in, vpos, false, indent+"\t")
+			//TODO: this is actually wrong, I should be collecting the end position from every alternative and using it instead of pos for every subsequent iteration (pos should be a list everywhere)
 		case '|':
-			return oldin
+			return oldin, vpos
 		case ')':
 			if toplevel {
 				panic("wtf")
 			}
-			return oldin
+			return oldin, vpos
 		default:
 			panic("wtf?")
 		}
@@ -153,7 +170,7 @@ func parseSingleRun(in []byte, pos Coord, toplevel bool, indent string) []byte {
 		panic("wtf?")
 	}
 
-	return in
+	return in, vpos
 }
 
 type path struct {
@@ -161,7 +178,7 @@ type path struct {
 	dist int
 }
 
-func shortestdist(start Coord) map[Coord]int {
+func (Graph Graph) shortestdist(start Coord) map[Coord]int {
 	fringe := []path{path{at: start, dist: 0}}
 	distmap := map[Coord]int{}
 
@@ -186,7 +203,7 @@ func shortestdist(start Coord) map[Coord]int {
 			if _, ok := distmap[Coord{i, j}]; ok {
 				return
 			}
-			if !haslink(cur.at, Coord{i, j}) {
+			if !Graph.haslink(cur.at, Coord{i, j}) {
 				return
 			}
 			fringe = append(fringe, path{Coord{i, j}, cur.dist + 1})
@@ -203,10 +220,9 @@ func shortestdist(start Coord) map[Coord]int {
 
 const debugDist = false
 
-func main() {
-	buf, err := ioutil.ReadFile("20.txt")
-	must(err)
-	input := strings.TrimSpace(string(buf))
+func problem(input string) (max, cnt1000 int) {
+	Graph := Graph{}
+
 	if input[0] != '^' {
 		panic("wtf")
 	}
@@ -215,13 +231,13 @@ func main() {
 		panic("wtf")
 	}
 	input = input[:len(input)-1]
-	parseAlternatives([]byte(input), Coord{0, 0}, true, "")
-	distmap := shortestdist(Coord{0, 0})
+	Graph.parseAlternatives([]byte(input), []Coord{{0, 0}}, true, "")
+	distmap := Graph.shortestdist(Coord{0, 0})
 	if debugDist {
 		fmt.Printf("%v\n", distmap)
 	}
-	cnt1000 := 0
-	max := 0
+	cnt1000 = 0
+	max = 0
 	for _, d := range distmap {
 		if d > max {
 			max = d
@@ -230,9 +246,34 @@ func main() {
 			cnt1000++
 		}
 	}
-	fmt.Printf("PART1: %d\n", max)
-	fmt.Printf("PART2: %d\n", cnt1000)
+	return max, cnt1000
 }
 
-// with greather than: 8782
-// with greather than or equal: 8784
+type Example struct {
+	input string
+	max   int
+}
+
+var examples = []Example{
+	{"^WNE$", 3},
+	{"^ENWWW(NEEE|SSE(EE|N))$", 10},
+	{"^ENNWSWW(NEWS|)SSSEEN(WNSE|)EE(SWEN|)NNN$", 18},
+	{"^ESSWWN(E|NNENN(EESS(WNSE|)SSS|WWWSSSSE(SW|NNNE)))$", 23},
+	{"^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))$", 31},
+}
+
+func main() {
+	for _, example := range examples {
+		max, _ := problem(example.input)
+		if max != example.max {
+			fmt.Printf("mismatch %q expected %d got %d\n", example.input, example.max, max)
+		}
+	}
+
+	buf, err := ioutil.ReadFile("20.txt")
+	must(err)
+	input := strings.TrimSpace(string(buf))
+	max, cnt1000 := problem(input)
+	fmt.Printf("PART1: %d (3151)\n", max)
+	fmt.Printf("PART2: %d (8784)\n", cnt1000)
+}
