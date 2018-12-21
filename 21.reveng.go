@@ -4,6 +4,7 @@ import "fmt"
 import "os"
 
 func main() {
+	cnt := 0
 	seen := make(map[int]bool)
 	reg1 := 0
 	reg4 := 0
@@ -40,7 +41,11 @@ func main() {
 		}
 
 		// ENDCHECK
-		fmt.Printf("%d (%v)\n", reg4, seen[reg4])
+		fmt.Printf("%d %d (%v)\n", cnt, reg4, seen[reg4])
+		if seen[reg4] {
+			return
+		}
+		cnt++
 		seen[reg4] = true
 		if reg4 == reg0 {
 			os.Exit(0)

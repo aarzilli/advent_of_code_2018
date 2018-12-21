@@ -293,16 +293,27 @@ func findOpcode(name string) Opcode {
 	panic("not found???")
 }
 
+var seen = make(map[int]bool)
+var cnt = 0
+
 func run() {
 	var regs Regs
 	//regs.r[0] = 12213578
 	ip := 0
 	for ip < len(text) {
 		regs.Set(ipreg, ip)
+		if regs.Val(ipreg) == 28 {
+			fmt.Printf("%d reg4 %d (%v)\n", cnt, regs.Val(4), seen[regs.Val(4)])
+			if seen[regs.Val(4)] {
+				return
+			}
+			cnt++
+			seen[regs.Val(4)] = true
+		}
 		instr := text[regs.Val(ipreg)]
-		fmt.Printf("%d %v %v\n", ip, instr, regs)
+		//fmt.Printf("%d %v %v\n", ip, instr, regs)
 		ok := findOpcode(instr.opcode).F(instr, &regs)
-		fmt.Printf("-> %v\n", regs)
+		//fmt.Printf("-> %v\n", regs)
 		if !ok {
 			panic("not ok???")
 		}
