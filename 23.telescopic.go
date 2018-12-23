@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	_ "os"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -243,8 +243,13 @@ func fusecandidates(candidates map[Coord]bool) (ps, pe Coord) {
 
 func main() {
 	var ptcs = []Ptc{}
+	
+	path := "23.txt"
+	if len(os.Args) > 1 {
+		path = os.Args[1]
+	}
 
-	buf, err := ioutil.ReadFile("23.txt")
+	buf, err := ioutil.ReadFile(path)
 	must(err)
 	for _, line := range strings.Split(string(buf), "\n") {
 		line = strings.TrimSpace(line)
